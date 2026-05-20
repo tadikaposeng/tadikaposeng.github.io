@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ — สิลสิลาห์</title>
+  <meta name="description" content="เข้าสู่ระบบหรือสมัครสมาชิก ระบบแผนผังเครือญาติ สิลสิลาห์">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="bg-mesh min-h-screen flex items-center justify-center p-4">
+
+<!-- Card -->
+<div class="w-full max-w-md">
+  <!-- Logo -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 shadow-2xl mb-4">
+      <span class="text-3xl">🌳</span>
+    </div>
+    <h1 class="text-3xl font-bold text-white">สิลสิลาห์</h1>
+    <p class="text-white/50 mt-1">ระบบแผนผังเครือญาติ</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-2 mb-6 p-1 rounded-2xl bg-white/5">
+    <button id="tab-login"    class="tab-btn active flex-1" onclick="switchTab('login')">เข้าสู่ระบบ</button>
+    <button id="tab-register" class="tab-btn flex-1"        onclick="switchTab('register')">สมัครสมาชิก</button>
+  </div>
+
+  <!-- Login Form -->
+  <div id="form-login" class="modal-box p-0" style="max-width:100%;transform:none;">
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="form-label">Username</label>
+        <input id="login-username" class="form-input" type="text" placeholder="username" autocomplete="username">
+      </div>
+      <div>
+        <label class="form-label">Password</label>
+        <input id="login-password" class="form-input" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button id="btn-login" class="btn btn-primary w-full mt-2" onclick="doLogin()">
+        <span>เข้าสู่ระบบ</span>
+      </button>
+      <p class="text-center text-sm text-white/40 pt-2">
+        หรือ <a href="index.html" class="text-amber-400 hover:underline">ดูข้อมูลในฐานะผู้เยี่ยมชม</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Register Form -->
+  <div id="form-register" class="modal-box p-0 hidden" style="max-width:100%;transform:none;">
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="form-label">ชื่อที่แสดง</label>
+        <input id="reg-displayName" class="form-input" type="text" placeholder="ชื่อ-นามสกุล">
+      </div>
+      <div>
+        <label class="form-label">Username</label>
+        <input id="reg-username" class="form-input" type="text" placeholder="username (อย่างน้อย 3 ตัว)" autocomplete="username">
+      </div>
+      <div>
+        <label class="form-label">Password</label>
+        <input id="reg-password" class="form-input" type="password" placeholder="••••••• (อย่างน้อย 6 ตัว)" autocomplete="new-password">
+      </div>
+      <button id="btn-register" class="btn btn-primary w-full mt-2" onclick="doRegister()">
+        <span>สมัครสมาชิก</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+  // Redirect if already logged in
+  if (Auth.isLoggedIn()) window.location.href = 'index.html';
+
+  function switchTab(tab) {
+    document.getElementById('form-login').classList.toggle('hidden',    tab !== 'login');
+    document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  }
+
+  async function doLogin() {
+    const btn = document.getElementById('btn-login');
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!username || !password) return showMsg('error', 'กรุณากรอกข้อมูลให้ครบ');
+    btn.disabled = true; btn.innerHTML = '<span class="animate-spin inline-block mr-2">⟳</span>กำลังเข้าสู่ระบบ...';
+    const res = await Auth.login(username, password);
+    btn.disabled = false; btn.innerHTML = 'เข้าสู่ระบบ';
+    if (res.success) {
+      showMsg('success', 'ยินดีต้อนรับ ' + res.data.displayName);
+      setTimeout(() => { window.location.href = 'index.html'; }, 900);
+    } else { showMsg('error', res.message); }
+  }
+
+  async function doRegister() {
+    const btn = document.getElementById('btn-register');
+    const displayName = document.getElementById('reg-displayName').value.trim();
+    const username    = document.getElementById('reg-username').value.trim();
+    const password    = document.getElementById('reg-password').value;
+    if (!displayName || !username || !password) return showMsg('error', 'กรุณากรอกข้อมูลให้ครบ');
+    btn.disabled = true; btn.innerHTML = '<span class="animate-spin inline-block mr-2">⟳</span>กำลังสมัคร...';
+    const res = await Auth.register(username, password, displayName);
+    btn.disabled = false; btn.innerHTML = 'สมัครสมาชิก';
+    if (res.success) {
+      showMsg('success', 'สมัครสมาชิกสำเร็จ!');
+      setTimeout(() => { window.location.href = 'index.html'; }, 900);
+    } else { showMsg('error', res.message); }
+  }
+
+  function showMsg(type, msg) {
+    const existing = document.getElementById('auth-msg');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.id = 'auth-msg';
+    el.className = `mt-3 p-3 rounded-xl text-sm text-center font-medium ${type === 'error' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}`;
+    el.textContent = msg;
+    const activeForm = document.getElementById('form-login').classList.contains('hidden')
+      ? document.getElementById('form-register') : document.getElementById('form-login');
+    activeForm.querySelector('.p-6').appendChild(el);
+  }
+
+  // Enter key
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') { document.getElementById('form-login').classList.contains('hidden') ? doRegister() : doLogin(); } });
+</script>
+</body>
+</html>

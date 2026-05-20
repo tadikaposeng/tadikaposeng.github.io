@@ -1,0 +1,213 @@
+/* ============================================================
+   style.css — Family Graph custom styles
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --amber:    #f59e0b;
+  --amber-lt: #fcd34d;
+  --dark-900: #0d0d1a;
+  --dark-800: #111128;
+  --dark-700: #1a1a35;
+  --dark-600: #22224a;
+  --glass:    rgba(255,255,255,0.07);
+  --glass-b:  rgba(255,255,255,0.12);
+  --card-r:   1.25rem;
+  --tr:       .25s ease;
+}
+
+body {
+  font-family: 'Noto Sans Thai', sans-serif;
+  background: var(--dark-900);
+  color: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Background pattern ─────────────────────────────────── */
+.bg-mesh {
+  background-color: var(--dark-900);
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(245,158,11,.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(139,92,246,.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(16,185,129,.08) 0%, transparent 60%);
+}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,13,26,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* ── Search input ───────────────────────────────────────── */
+.search-wrap { position: relative; }
+.search-wrap input {
+  width: 100%;
+  background: var(--glass-b);
+  border: 1.5px solid rgba(255,255,255,.15);
+  border-radius: 9999px;
+  padding: .75rem 1.25rem .75rem 3rem;
+  color: #fff; font-size: 1rem; font-family: inherit;
+  transition: border-color var(--tr), box-shadow var(--tr);
+  outline: none;
+}
+.search-wrap input::placeholder { color: rgba(255,255,255,.4); }
+.search-wrap input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.2); }
+.search-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.4); pointer-events:none; }
+
+/* ── Form inputs ────────────────────────────────────────── */
+.form-label  { display:block; font-size:.8rem; color:rgba(255,255,255,.6); margin-bottom:.35rem; }
+.form-input  {
+  width:100%; background:rgba(255,255,255,.08);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:.75rem; padding:.6rem 1rem;
+  color:#fff; font-size:.9rem; font-family:inherit;
+  transition:border-color var(--tr); outline:none;
+}
+.form-input:focus { border-color:var(--amber); }
+.form-input option { background:var(--dark-700); }
+select.form-input { cursor:pointer; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  padding:.6rem 1.4rem; border-radius:9999px; font-family:inherit;
+  font-weight:600; font-size:.9rem; cursor:pointer; border:none;
+  transition:all .2s ease; }
+.btn-primary { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(245,158,11,.35); }
+.btn-ghost   { background:transparent; color:rgba(255,255,255,.7); border:1.5px solid rgba(255,255,255,.2); }
+.btn-ghost:hover { background:var(--glass); color:#fff; }
+.btn-danger  { background:linear-gradient(135deg,#f43f5e,#dc2626); color:#fff; }
+.btn-sm      { padding:.4rem .9rem; font-size:.8rem; }
+
+/* ── Graph container ────────────────────────────────────── */
+#graph-container {
+  position:relative; overflow:hidden;
+  width:100%; height:calc(100vh - 70px);
+  background: radial-gradient(ellipse at center, #1a1a35 0%, #0d0d1a 100%);
+  user-select:none;
+}
+
+/* ── Graph node card ─────────────────────────────────────── */
+.person-node { z-index: 10; }
+.node-card {
+  width:100%; height:100%;
+  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.06));
+  border:1.5px solid rgba(255,255,255,.2);
+  border-radius:1.1rem;
+  display:flex; flex-direction:column; align-items:center;
+  padding:.6rem .5rem .5rem;
+  cursor:default;
+  transition:transform .2s, box-shadow .2s;
+  backdrop-filter:blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+.node-card:hover { transform:scale(1.04); box-shadow:0 8px 30px rgba(0,0,0,.5), 0 0 0 2px var(--amber); }
+.node-deceased { opacity:.65; border-style:dashed; }
+
+.node-photo {
+  width:60px; height:60px; border-radius:50%; overflow:hidden;
+  border:2px solid rgba(245,158,11,.5);
+  cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  transition:border-color .2s;
+  background:var(--dark-700);
+}
+.node-photo:hover { border-color:var(--amber); }
+.node-photo img   { width:100%; height:100%; object-fit:cover; }
+
+.node-name  { font-size:.78rem; font-weight:600; color:#fff; text-align:center; margin-top:.4rem; line-height:1.2; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.node-nick  { font-size:.68rem; color:var(--amber-lt); text-align:center; }
+
+/* ── Node control buttons ────────────────────────────────── */
+.node-controls {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:2px;
+  margin-top:auto; width:100%; padding-top:.4rem;
+}
+.nbtn {
+  background:rgba(255,255,255,.1); border:none; border-radius:.4rem;
+  color:rgba(255,255,255,.8); font-size:.75rem; cursor:pointer;
+  padding:.25rem 0; transition:background .15s, color .15s;
+  font-family:inherit;
+}
+.nbtn:hover  { background:rgba(245,158,11,.4); color:#fff; }
+.nbtn-up     { grid-column:2; }
+.nbtn-left   { }
+.nbtn-plus   { background:rgba(16,185,129,.25); color:#6ee7b7; }
+.nbtn-plus:hover { background:rgba(16,185,129,.5); }
+.nbtn-right  { }
+.nbtn-down   { grid-column:2; }
+
+/* ── Modal ───────────────────────────────────────────────── */
+.modal-overlay {
+  position:fixed; inset:0; z-index:1000;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center; padding:1rem;
+  opacity:0; transition:opacity .3s;
+}
+.modal-overlay.modal-visible { opacity:1; }
+.modal-overlay.modal-visible .modal-box { transform:translateY(0) scale(1); }
+.modal-box {
+  background:linear-gradient(160deg,var(--dark-700),var(--dark-800));
+  border:1px solid rgba(255,255,255,.12); border-radius:1.5rem;
+  width:100%; max-width:480px; max-height:90vh; overflow-y:auto;
+  padding:1.75rem; transform:translateY(30px) scale(.97); transition:transform .3s;
+}
+.modal-title { font-size:1.2rem; font-weight:700; color:#fff; margin-bottom:1rem; }
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar       { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,.2); border-radius:9999px; }
+
+/* ── Toast animation ─────────────────────────────────────── */
+@keyframes slideInToast { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Node appear animation ───────────────────────────────── */
+@keyframes nodeAppear { from { opacity:0; transform:scale(.5); } to { opacity:1; transform:scale(1); } }
+
+/* ── Edge draw animation ─────────────────────────────────── */
+@keyframes edgeDraw { from { stroke-dashoffset:500; } to { stroke-dashoffset:0; } }
+
+/* ── Graph toolbar ───────────────────────────────────────── */
+.graph-toolbar {
+  position:absolute; bottom:1.5rem; right:1.5rem; z-index:50;
+  display:flex; flex-direction:column; gap:.5rem;
+}
+.graph-toolbar button {
+  width:40px; height:40px; border-radius:50%; border:none;
+  background:rgba(255,255,255,.12); backdrop-filter:blur(8px);
+  color:#fff; font-size:1.1rem; cursor:pointer;
+  transition:background .2s, transform .2s;
+  display:flex; align-items:center; justify-content:center;
+}
+.graph-toolbar button:hover { background:rgba(245,158,11,.5); transform:scale(1.1); }
+
+/* ── Search result list ──────────────────────────────────── */
+.search-results { display:flex; flex-direction:column; gap:.6rem; }
+.search-card { transition:all .2s ease; }
+
+/* ── Relation badge ──────────────────────────────────────── */
+.rel-badge { display:inline-block; font-size:.7rem; padding:.2rem .6rem; border-radius:9999px; font-weight:600; }
+
+/* ── Table ───────────────────────────────────────────────── */
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { background:rgba(255,255,255,.08); padding:.6rem 1rem; text-align:left; font-size:.8rem; color:rgba(255,255,255,.6); }
+.data-table td { padding:.65rem 1rem; font-size:.85rem; border-bottom:1px solid rgba(255,255,255,.05); }
+.data-table tr:hover td { background:rgba(255,255,255,.04); }
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.tab-btn { padding:.5rem 1.25rem; border-radius:9999px; font-size:.85rem; font-weight:500; cursor:pointer; border:none; font-family:inherit; transition:all .2s; color:rgba(255,255,255,.6); background:transparent; }
+.tab-btn.active { background:var(--amber); color:#fff; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width:640px) {
+  .modal-box { padding:1.25rem; }
+  .node-card  { padding:.4rem; }
+  .node-photo { width:48px; height:48px; }
+  .node-name  { font-size:.72rem; }
+}

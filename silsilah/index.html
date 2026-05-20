@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silsilah — ระบบแผนผังเครือญาติ</title>
+  <meta name="description" content="ค้นหาและดูแผนผังเครือญาติแบบ Dynamic ขยายได้ไม่จำกัดชั้น">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body class="bg-mesh min-h-screen">
+
+  <!-- NAVBAR -->
+  <nav class="navbar px-4 py-3 flex items-center gap-3">
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span class="text-2xl">🌳</span>
+      <span class="font-bold text-white hidden sm:block">Silsilah</span>
+    </div>
+    <div class="search-wrap flex-1 max-w-xl mx-auto">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" type="search" placeholder="ค้นหาชื่อ นามสกุล หรือชื่อเล่น..." autocomplete="off">
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0" id="nav-auth">
+      <a href="login.html" class="btn btn-ghost btn-sm">เข้าสู่ระบบ</a>
+    </div>
+  </nav>
+
+  <!-- SEARCH VIEW -->
+  <div id="view-search" class="max-w-2xl mx-auto px-4 py-8">
+    <div id="search-empty" class="text-center py-16">
+      <div class="text-6xl mb-4">🌿</div>
+      <h2 class="text-2xl font-bold text-white mb-2">ค้นหาเครือญาติ</h2>
+      <p class="text-white/50 mb-6">พิมพ์ชื่อในช่องค้นหาเพื่อเริ่มต้น</p>
+      <button id="btn-add-first" class="btn btn-primary hidden" onclick="openAddPerson(null)">+ เพิ่มบุคคลแรก</button>
+    </div>
+    <div id="search-loading" class="hidden text-center py-8">
+      <div class="w-10 h-10 border-4 border-white/20 border-t-amber-400 rounded-full animate-spin mx-auto"></div>
+      <p class="text-white/50 mt-3">กำลังค้นหา...</p>
+    </div>
+    <div id="search-results" class="search-results hidden"></div>
+    <div id="search-not-found" class="hidden text-center py-12">
+      <div class="text-5xl mb-3">🔎</div>
+      <p class="text-white/60 mb-4">ไม่พบข้อมูล</p>
+      <button class="btn btn-primary" onclick="openAddPerson(null)">+ เพิ่มข้อมูลใหม่</button>
+    </div>
+  </div>
+
+  <!-- GRAPH VIEW -->
+  <div id="view-graph" class="hidden">
+    <div class="flex items-center gap-2 px-4 py-2 bg-black/30 border-b border-white/10">
+      <button onclick="backToSearch()" class="btn btn-ghost btn-sm">← ค้นหา</button>
+      <span class="text-white/40">|</span>
+      <span id="graph-person-name" class="text-white font-semibold"></span>
+      <span class="flex-1"></span>
+      <button onclick="graph.zoomIn()" class="btn btn-ghost btn-sm px-2">+</button>
+      <button onclick="graph.zoomOut()" class="btn btn-ghost btn-sm px-2">−</button>
+      <button onclick="graph.resetView()" class="btn btn-ghost btn-sm px-2">⌖</button>
+      <button id="btn-edit-person" class="btn btn-ghost btn-sm hidden" onclick="openEditPerson()">✏️ แก้ไข</button>
+      <button id="btn-merge-person" class="btn btn-ghost btn-sm hidden" onclick="openMerge()">🔗 Merge</button>
+      <a href="admin.html" id="link-admin" class="btn btn-ghost btn-sm hidden">⚙️ Admin</a>
+    </div>
+    <div id="graph-container"></div>
+  </div>
+
+  <!-- LEGEND -->
+  <div id="graph-legend"
+    class="hidden fixed bottom-4 left-4 z-50 bg-black/60 backdrop-blur-sm rounded-xl p-3 text-xs space-y-1">
+    <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block"
+        style="background:#f59e0b"></span><span class="text-white/70">พ่อ/แม่</span></div>
+    <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block"
+        style="background:#10b981"></span><span class="text-white/70">ลูก</span></div>
+    <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block"
+        style="background:#f43f5e"></span><span class="text-white/70">คู่สมรส</span></div>
+    <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block"
+        style="background:#8b5cf6"></span><span class="text-white/70">พี่/น้อง</span></div>
+  </div>
+
+  <!-- MODAL: Person Detail -->
+  <div id="modal-detail" class="modal-overlay hidden" onclick="handleOverlayClick(event,'modal-detail')">
+    <div class="modal-box">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="modal-title mb-0">ข้อมูลบุคคล</h2>
+        <button onclick="UI.closeModal('modal-detail')" class="text-white/40 hover:text-white text-xl">✕</button>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add/Edit Person -->
+  <div id="modal-person" class="modal-overlay hidden" onclick="handleOverlayClick(event,'modal-person')">
+    <div class="modal-box">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="person-modal-title" class="modal-title mb-0">เพิ่มบุคคล</h2>
+        <button onclick="UI.closeModal('modal-person')" class="text-white/40 hover:text-white text-xl">✕</button>
+      </div>
+      <div id="person-form-wrap"></div>
+      <div id="duplicate-warning" class="hidden mt-3 p-3 rounded-xl bg-amber-500/20 text-amber-300 text-sm"></div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="UI.closeModal('modal-person')" class="btn btn-ghost flex-1">ยกเลิก</button>
+        <button id="btn-save-person" onclick="savePerson()" class="btn btn-primary flex-1">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Relation -->
+  <div id="modal-relation" class="modal-overlay hidden" onclick="handleOverlayClick(event,'modal-relation')">
+    <div class="modal-box">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="modal-title mb-0">เพิ่มความสัมพันธ์</h2>
+        <button onclick="UI.closeModal('modal-relation')" class="text-white/40 hover:text-white text-xl">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">ประเภทความสัมพันธ์</label>
+          <select id="rel-type" class="form-input">
+            <option value="parent">พ่อ/แม่ (Parent)</option>
+            <option value="child">ลูก (Child)</option>
+            <option value="spouse">คู่สมรส (Spouse)</option>
+            <option value="sibling">พี่/น้อง (Sibling)</option>
+            <option value="adopted_parent">พ่อ/แม่อุปถัมภ์</option>
+            <option value="adopted_child">ลูกบุญธรรม</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">ค้นหาบุคคล</label>
+          <input id="rel-search" class="form-input" placeholder="พิมพ์ชื่อเพื่อค้นหา...">
+          <div id="rel-search-results" class="mt-2 space-y-2 max-h-48 overflow-y-auto"></div>
+        </div>
+        <div id="rel-selected" class="hidden p-3 rounded-xl bg-white/10 text-white text-sm"></div>
+        <button id="btn-add-new-for-rel" onclick="addNewForRelation()" class="btn btn-ghost w-full">+
+          เพิ่มบุคคลใหม่</button>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="UI.closeModal('modal-relation')" class="btn btn-ghost flex-1">ยกเลิก</button>
+        <button id="btn-save-rel" onclick="saveRelation()" class="btn btn-primary flex-1">บันทึกความสัมพันธ์</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Merge -->
+  <div id="modal-merge" class="modal-overlay hidden" onclick="handleOverlayClick(event,'modal-merge')">
+    <div class="modal-box">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="modal-title mb-0">🔗 รวมบุคคล (Merge)</h2>
+        <button onclick="UI.closeModal('modal-merge')" class="text-white/40 hover:text-white text-xl">✕</button>
+      </div>
+      <p class="text-white/60 text-sm mb-4">รวม <strong class="text-white" id="merge-source-name"></strong>
+        เข้ากับบุคคลที่ค้นหาด้านล่าง</p>
+      <input id="merge-search" class="form-input mb-3" placeholder="ค้นหาบุคคลที่ต้องการรวม...">
+      <div id="merge-results" class="space-y-2 max-h-48 overflow-y-auto mb-4"></div>
+      <div id="merge-target-selected" class="hidden p-3 rounded-xl bg-rose-500/20 text-rose-300 text-sm mb-4"></div>
+      <div class="flex gap-2">
+        <button onclick="UI.closeModal('modal-merge')" class="btn btn-ghost flex-1">ยกเลิก</button>
+        <button id="btn-confirm-merge" onclick="confirmMerge()" class="btn btn-danger flex-1">⚠️ ยืนยัน Merge</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/person.js"></script>
+  <script src="assets/js/graph.js"></script>
+  <script>
+    // ── State ────────────────────────────────────────────────
+    let graph = null;
+    let currentPerson = null;
+    let relFromPersonId = null;
+    let relSelectedPerson = null;
+    let mergeTargetPerson = null;
+    let editingPersonId = null;
+    let searchTimer = null;
+    let lastSearchResults = [];
+
+    // ── Init ─────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      updateNavAuth();
+      setupSearch();
+      if (Auth.isLoggedIn()) document.getElementById('btn-add-first').classList.remove('hidden');
+    });
+
+    window.addEventListener('auth-change', () => updateNavAuth());
+
+    function updateNavAuth() {
+      const user = Auth.getUser();
+      const nav = document.getElementById('nav-auth');
+      if (user) {
+        nav.innerHTML = `
+      <span class="text-sm text-white/60 hidden sm:block">${user.displayName}</span>
+      ${user.role === 'admin' ? '<a href="admin.html" class="btn btn-ghost btn-sm">⚙️ Admin</a>' : ''}
+      <button onclick="doLogout()" class="btn btn-ghost btn-sm">ออก</button>`;
+      } else {
+        nav.innerHTML = `<a href="login.html" class="btn btn-ghost btn-sm">เข้าสู่ระบบ</a>`;
+      }
+      document.getElementById('btn-add-first')?.classList.toggle('hidden', !Auth.isLoggedIn());
+    }
+
+    async function doLogout() {
+      await Auth.logout();
+      updateNavAuth();
+      UI.toast('ออกจากระบบแล้ว', 'info');
+    }
+
+    // ── Search ───────────────────────────────────────────────
+    function setupSearch() {
+      const inp = document.getElementById('search-input');
+      inp.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        const q = inp.value.trim();
+        if (!q) { showSearchEmpty(); return; }
+        searchTimer = setTimeout(() => doSearch(q), CONFIG.SEARCH_DEBOUNCE);
+      });
+    }
+
+    function showSearchEmpty() {
+      document.getElementById('search-empty').classList.remove('hidden');
+      document.getElementById('search-loading').classList.add('hidden');
+      document.getElementById('search-results').classList.add('hidden');
+      document.getElementById('search-not-found').classList.add('hidden');
+    }
+
+    async function doSearch(q) {
+      document.getElementById('search-empty').classList.add('hidden');
+      document.getElementById('search-loading').classList.remove('hidden');
+      document.getElementById('search-results').classList.add('hidden');
+      document.getElementById('search-not-found').classList.add('hidden');
+
+      const res = await API.searchPerson(q);
+      document.getElementById('search-loading').classList.add('hidden');
+      if (!res.success) { UI.toast(res.message, 'error'); return; }
+
+      lastSearchResults = res.data || [];
+      if (!lastSearchResults.length) {
+        document.getElementById('search-not-found').classList.remove('hidden');
+        return;
+      }
+      const wrap = document.getElementById('search-results');
+      wrap.innerHTML = '';
+      lastSearchResults.forEach(p => wrap.appendChild(UI.searchCard(p, openGraph)));
+      wrap.classList.remove('hidden');
+    }
+
+    // ── Graph ─────────────────────────────────────────────────
+    function openGraph(person) {
+      currentPerson = person;
+      document.getElementById('view-search').classList.add('hidden');
+      document.getElementById('view-graph').classList.remove('hidden');
+      document.getElementById('graph-legend').classList.remove('hidden');
+      document.getElementById('graph-person-name').textContent = person.firstName + (person.lastName ? ' ' + person.lastName : '');
+
+      // Member controls
+      const isMember = Auth.isMember();
+      document.getElementById('btn-edit-person').classList.toggle('hidden', !isMember);
+      document.getElementById('btn-merge-person').classList.toggle('hidden', !isMember);
+      document.getElementById('link-admin').classList.toggle('hidden', !Auth.isAdmin());
+
+      if (!graph) {
+        graph = new FamilyGraph.Graph('graph-container');
+        graph.init();
+        graph.onSelectPerson(p => { UI.renderPersonDetail(p); UI.openModal('modal-detail'); });
+        graph.onAddRelation(pid => { if (!Auth.isMember()) { UI.toast('กรุณาเข้าสู่ระบบก่อน', 'warning'); return; } relFromPersonId = pid; openAddRelation(); });
+      }
+      graph.addRootNode(person);
+    }
+
+    function backToSearch() {
+      document.getElementById('view-graph').classList.add('hidden');
+      document.getElementById('graph-legend').classList.add('hidden');
+      document.getElementById('view-search').classList.remove('hidden');
+    }
+
+    // ── Person Modal ──────────────────────────────────────────
+    function openAddPerson(afterSaveCb) {
+      if (!Auth.isMember()) { window.location.href = 'login.html'; return; }
+      editingPersonId = null;
+      window._afterPersonSave = afterSaveCb || null;
+      document.getElementById('person-modal-title').textContent = 'เพิ่มบุคคล';
+      document.getElementById('person-form-wrap').innerHTML = PersonManager.buildForm();
+      document.getElementById('duplicate-warning').classList.add('hidden');
+      UI.openModal('modal-person');
+
+      // Duplicate check on name blur
+      document.getElementById('pf-firstName')?.addEventListener('blur', checkDuplicates);
+      document.getElementById('pf-lastName')?.addEventListener('blur', checkDuplicates);
+    }
+
+    function openEditPerson() {
+      if (!currentPerson || !Auth.isMember()) return;
+      editingPersonId = currentPerson.personId;
+      window._afterPersonSave = null;
+      document.getElementById('person-modal-title').textContent = 'แก้ไขข้อมูล';
+      document.getElementById('person-form-wrap').innerHTML = PersonManager.buildForm(currentPerson);
+      document.getElementById('duplicate-warning').classList.add('hidden');
+      UI.openModal('modal-person');
+    }
+
+    async function checkDuplicates() {
+      const fn = document.getElementById('pf-firstName')?.value.trim();
+      const ln = document.getElementById('pf-lastName')?.value.trim();
+      if (!fn) return;
+      const res = await API.searchPerson(fn);
+      if (res.success && res.data.length) {
+        const dups = PersonManager.findDuplicates({ firstName: fn, lastName: ln }, res.data);
+        if (dups.length) {
+          const warn = document.getElementById('duplicate-warning');
+          warn.textContent = `⚠️ พบบุคคลที่อาจซ้ำกัน: ${dups.map(d => d.firstName + ' ' + (d.lastName || '')).join(', ')} — กรุณาตรวจสอบก่อนเพิ่ม`;
+          warn.classList.remove('hidden');
+        }
+      }
+    }
+
+    async function savePerson() {
+      const btn = document.getElementById('btn-save-person');
+      const data = PersonManager.getFormData();
+      if (!data.firstName) { UI.toast('กรุณาใส่ชื่อ', 'error'); return; }
+
+      btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+
+      // Handle photo upload
+      const photoFile = document.getElementById('pf-photo')?.files?.[0];
+      if (photoFile) {
+        UI.showLoading('กำลังอัปโหลดรูป...');
+        const upRes = await PersonManager.uploadPhoto(photoFile);
+        UI.hideLoading();
+        if (upRes.success) data.photoUrl = upRes.data.photoUrl;
+        else UI.toast('อัปโหลดรูปไม่สำเร็จ: ' + upRes.message, 'warning');
+      }
+
+      let res;
+      if (editingPersonId) {
+        res = await API.updatePerson({ ...data, personId: editingPersonId });
+      } else {
+        res = await API.addPerson(data);
+      }
+
+      btn.disabled = false; btn.textContent = 'บันทึก';
+      if (res.success) {
+        UI.toast(res.message, 'success');
+        UI.closeModal('modal-person');
+        if (window._afterPersonSave) window._afterPersonSave(res.data);
+        else if (editingPersonId) {
+          // Refresh current person
+          const refreshed = await API.getPerson(editingPersonId);
+          if (refreshed.success) { currentPerson = refreshed.data; UI.renderPersonDetail(refreshed.data); }
+        }
+      } else { UI.toast(res.message, 'error'); }
+    }
+
+    // ── Relation Modal ────────────────────────────────────────
+    function openAddRelation() {
+      relSelectedPerson = null;
+      document.getElementById('rel-search').value = '';
+      document.getElementById('rel-search-results').innerHTML = '';
+      document.getElementById('rel-selected').classList.add('hidden');
+      UI.openModal('modal-relation');
+
+      let relTimer;
+      document.getElementById('rel-search').oninput = () => {
+        clearTimeout(relTimer);
+        const q = document.getElementById('rel-search').value.trim();
+        if (!q) return;
+        relTimer = setTimeout(() => searchForRelation(q), 400);
+      };
+    }
+
+    async function searchForRelation(q) {
+      const res = await API.searchPerson(q);
+      const wrap = document.getElementById('rel-search-results');
+      wrap.innerHTML = '';
+      if (!res.success || !res.data.length) { wrap.innerHTML = '<p class="text-white/40 text-sm">ไม่พบ</p>'; return; }
+      res.data.slice(0, 10).forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left p-2 rounded-xl hover:bg-white/10 transition flex items-center gap-3';
+        btn.innerHTML = `<div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">${UI.avatar(p, 'w-8 h-8')}</div>
+      <div><p class="text-white text-sm font-medium">${p.firstName} ${p.lastName || ''}</p>
+           ${p.nickName ? `<p class="text-amber-300 text-xs">"${p.nickName}"</p>` : ''}</div>`;
+        btn.onclick = () => selectRelPerson(p);
+        wrap.appendChild(btn);
+      });
+    }
+
+    function selectRelPerson(p) {
+      relSelectedPerson = p;
+      const el = document.getElementById('rel-selected');
+      el.textContent = `เลือก: ${p.firstName} ${p.lastName || ''} ${p.nickName ? `"${p.nickName}"` : ''}`;
+      el.classList.remove('hidden');
+      document.getElementById('rel-search-results').innerHTML = '';
+    }
+
+    function addNewForRelation() {
+      UI.closeModal('modal-relation');
+      openAddPerson(newPerson => {
+        if (newPerson) { relSelectedPerson = { personId: newPerson.personId, firstName: newPerson.firstName }; openAddRelation(); }
+      });
+    }
+
+    async function saveRelation() {
+      if (!relFromPersonId || !relSelectedPerson) { UI.toast('กรุณาเลือกบุคคล', 'error'); return; }
+      const relType = document.getElementById('rel-type').value;
+      const btn = document.getElementById('btn-save-rel');
+      btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+      const res = await API.addRelation({ fromPersonId: relFromPersonId, toPersonId: relSelectedPerson.personId, relationType: relType });
+      btn.disabled = false; btn.textContent = 'บันทึกความสัมพันธ์';
+      if (res.success) { UI.toast(res.message, 'success'); UI.closeModal('modal-relation'); }
+      else UI.toast(res.message, 'error');
+    }
+
+    // ── Merge ─────────────────────────────────────────────────
+    function openMerge() {
+      if (!currentPerson) return;
+      mergeTargetPerson = null;
+      document.getElementById('merge-source-name').textContent = currentPerson.firstName + ' ' + (currentPerson.lastName || '');
+      document.getElementById('merge-search').value = '';
+      document.getElementById('merge-results').innerHTML = '';
+      document.getElementById('merge-target-selected').classList.add('hidden');
+      UI.openModal('modal-merge');
+
+      let mTimer;
+      document.getElementById('merge-search').oninput = () => {
+        clearTimeout(mTimer);
+        const q = document.getElementById('merge-search').value.trim();
+        if (!q) return;
+        mTimer = setTimeout(() => searchForMerge(q), 400);
+      };
+    }
+
+    async function searchForMerge(q) {
+      const res = await API.searchPerson(q);
+      const wrap = document.getElementById('merge-results');
+      wrap.innerHTML = '';
+      if (!res.success || !res.data.length) { wrap.innerHTML = '<p class="text-white/40 text-sm">ไม่พบ</p>'; return; }
+      res.data.filter(p => p.personId !== currentPerson?.personId).slice(0, 8).forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left p-2 rounded-xl hover:bg-white/10 transition text-white text-sm';
+        btn.textContent = `${p.firstName} ${p.lastName || ''} ${p.nickName ? `"${p.nickName}"` : ''}`;
+        btn.onclick = () => {
+          mergeTargetPerson = p;
+          document.getElementById('merge-target-selected').textContent = `Target: ${p.firstName} ${p.lastName || ''}`;
+          document.getElementById('merge-target-selected').classList.remove('hidden');
+          wrap.innerHTML = '';
+        };
+        wrap.appendChild(btn);
+      });
+    }
+
+    async function confirmMerge() {
+      if (!currentPerson || !mergeTargetPerson) { UI.toast('กรุณาเลือกบุคคลที่ต้องการรวม', 'error'); return; }
+      if (!confirm(`รวม "${currentPerson.firstName}" เข้ากับ "${mergeTargetPerson.firstName}" ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้`)) return;
+      const res = await API.mergePerson(currentPerson.personId, mergeTargetPerson.personId);
+      if (res.success) { UI.toast('รวมข้อมูลสำเร็จ', 'success'); UI.closeModal('modal-merge'); openGraph(mergeTargetPerson); }
+      else UI.toast(res.message, 'error');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────
+    function handleOverlayClick(e, modalId) {
+      if (e.target.id === modalId) UI.closeModal(modalId);
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') UI.closeAllModals(); });
+  </script>
+</body>
+
+</html>
