@@ -7,7 +7,7 @@ const UI = (() => {
   // ── Toast ────────────────────────────────────────────────
   function toast(message, type = 'info', duration = 3500) {
     const colors = { success: 'bg-emerald-500', error: 'bg-rose-500', info: 'bg-sky-500', warning: 'bg-amber-500' };
-    const icons  = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
     const el = document.createElement('div');
     el.className = `fixed z-[9999] flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl text-white text-sm font-medium
                     transition-all duration-500 translate-y-0 opacity-100 ${colors[type] || colors.info}`;
@@ -49,12 +49,12 @@ const UI = (() => {
   // ── Gender Icon ──────────────────────────────────────────
   function genderIcon(gender, large = false) {
     const size = large ? 'w-24 h-24 text-5xl' : 'w-full h-full text-3xl';
-    const bg   = gender === 'female'
+    const bg = gender === 'female'
       ? 'from-pink-400 to-rose-500'
       : gender === 'male'
-      ? 'from-sky-400 to-blue-600'
-      : 'from-slate-400 to-slate-600';
-    const ic   = gender === 'female' ? '♀' : gender === 'male' ? '♂' : '?';
+        ? 'from-sky-400 to-blue-600'
+        : 'from-slate-400 to-slate-600';
+    const ic = gender === 'female' ? '♀' : gender === 'male' ? '♂' : '?';
     return `<div class="${size} rounded-full bg-gradient-to-br ${bg} flex items-center justify-center text-white font-bold">${ic}</div>`;
   }
 
@@ -62,7 +62,7 @@ const UI = (() => {
   function avatar(person, size = 'w-16 h-16') {
     if (person.photoUrl) {
       return `<img src="${person.photoUrl}" class="${size} rounded-full object-cover border-2 border-white/30" 
-                   onerror="this.outerHTML='${genderIcon(person.gender).replace(/"/g,"'")}'">`;
+                   onerror="this.outerHTML='${genderIcon(person.gender).replace(/"/g, "'")}'">`;
     }
     return `<div class="${size}">${genderIcon(person.gender)}</div>`;
   }
@@ -98,16 +98,16 @@ const UI = (() => {
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3 text-sm">
-        ${detailRow('เพศ',        person.gender === 'male' ? 'ชาย' : person.gender === 'female' ? 'หญิง' : '-')}
-        ${detailRow('วันเกิด',    person.birthDate  || '-')}
-        ${detailRow('วันเสียชีวิต', person.deathDate|| '-')}
-        ${detailRow('โทรศัพท์',  person.phone      || '-')}
-        ${detailRow('ที่อยู่',    person.address    || '-', true)}
+        ${detailRow('เพศ', person.gender === 'male' ? 'ชาย' : person.gender === 'female' ? 'หญิง' : '-')}
+        ${detailRow('วันเกิด', person.birthDate || '-')}
+        ${detailRow('วันเสียชีวิต', person.deathDate || '-')}
+        ${detailRow('โทรศัพท์', person.phone || '-')}
+        ${detailRow('ที่อยู่', person.address || '-', true)}
         ${person.latitude ? detailRow('พิกัด', person.latitude + ', ' + person.longitude) : ''}
-        ${detailRow('รายละเอียด',person.description || '-', true)}
+        ${detailRow('รายละเอียด', person.description || '-', true)}
       </div>
       <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/40">
-        <p>สร้างโดย: ${person.createdBy} | ${fmtDate(person.createdAt)}</p>
+        <p>สร้างโดย: ${person.createdByName || person.createdBy || '-'} | ${fmtDate(person.createdAt)}</p>
         <p>แก้ไขล่าสุด: ${fmtDate(person.updatedAt)}</p>
       </div>`;
   }
@@ -122,7 +122,7 @@ const UI = (() => {
 
   function fmtDate(iso) {
     if (!iso) return '-';
-    try { return new Date(iso).toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' }); }
+    try { return new Date(iso).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }); }
     catch { return iso; }
   }
 
