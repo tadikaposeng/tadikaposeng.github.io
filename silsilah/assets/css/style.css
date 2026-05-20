@@ -124,12 +124,12 @@ select.form-input { cursor:pointer; }
 .node-name  { font-size:.78rem; font-weight:600; color:#fff; text-align:center; margin-top:.4rem; line-height:1.2; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .node-nick  { font-size:.68rem; color:var(--amber-lt); text-align:center; }
 
-/* ── Node control buttons — cross layout outside card ────── */
+/* ── Node control buttons — cross layout BELOW the card ────── */
 .node-controls {
   position: absolute;
-  /* center the 3×3 grid over the card */
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
+  /* place below card, centered horizontally */
+  bottom: -108px; left: 50%;
+  transform: translateX(-50%);
   width:  126px;   /* 3 × 38px btn + 2 × 6px gap */
   height: 126px;
   display: grid;
@@ -141,26 +141,35 @@ select.form-input { cursor:pointer; }
   transition: opacity .2s;
   z-index: 20;
 }
-.person-node:hover .node-controls {
+.person-node:hover .node-controls,
+.person-node:focus-within .node-controls {
   opacity: 1;
   pointer-events: auto;
+}
+/* Touch devices: show controls on tap via active state */
+@media (hover: none) {
+  .person-node.touch-active .node-controls {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 .nbtn {
   width:38px; height:38px;
   display:flex; align-items:center; justify-content:center;
   background:rgba(30,30,80,.85); border:1.5px solid rgba(255,255,255,.25);
-  border-radius:.65rem; color:#fff; font-size:1rem;
+  border-radius:.65rem; color:#fff; font-size:.85rem;
   cursor:pointer; transition:background .15s, transform .1s;
   font-family:inherit; backdrop-filter:blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  line-height:1;
 }
 .nbtn:hover  { background:rgba(245,158,11,.75); border-color:var(--amber); transform:scale(1.12); }
 /* cross positions in 3×3 grid */
 .nbtn-up    { grid-column:2; grid-row:1; }
-.nbtn-left  { grid-column:1; grid-row:2; }
+.nbtn-left  { grid-column:1; grid-row:2; font-size:1.15rem; }
 .nbtn-plus  { grid-column:2; grid-row:2; background:rgba(16,185,129,.6); border-color:#6ee7b7; }
 .nbtn-plus:hover { background:rgba(16,185,129,.9); }
-.nbtn-right { grid-column:3; grid-row:2; }
+.nbtn-right { grid-column:3; grid-row:2; font-size:.65rem; line-height:1.1; }
 .nbtn-down  { grid-column:2; grid-row:3; }
 
 /* ── Modal ───────────────────────────────────────────────── */
