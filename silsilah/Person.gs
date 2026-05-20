@@ -39,10 +39,12 @@ function searchPerson(payload) {
     var results = [];
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][16]) === 'true') continue; // skip merged
-      var fn = String(data[i][1]).toLowerCase();
-      var ln = String(data[i][2]).toLowerCase();
-      var nn = String(data[i][3]).toLowerCase();
-      if (fn.includes(q) || ln.includes(q) || nn.includes(q)) {
+      var fn   = String(data[i][1]).toLowerCase();
+      var ln   = String(data[i][2]).toLowerCase();
+      var nn   = String(data[i][3]).toLowerCase();
+      var addr = String(data[i][8]).toLowerCase();
+      var desc = String(data[i][12]).toLowerCase();
+      if (fn.includes(q) || ln.includes(q) || nn.includes(q) || addr.includes(q) || desc.includes(q)) {
         results.push(rowToPerson(data[i]));
         if (results.length >= 50) break;
       }
