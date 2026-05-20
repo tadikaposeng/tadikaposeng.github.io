@@ -49,10 +49,57 @@ function addRelation(payload, user) {
       sheet.appendRow([generateId(), toId, fromId, reverseType, user.userId, now, 'active']);
     }
 
+    // ── Auto-sibling: หา parent และ child จาก relation ที่เพิ่ม ──
+    // parentId = คนที่เป็นพ่อ/แม่, newChildId = ลูกใหม่
+    var parentId   = null;
+    var newChildId = null;
+    if (rtype === 'child') {
+      // fromId เป็นพ่อ/แม่, toId เป็นลูกใหม่
+      parentId   = fromId;
+      newChildId = toId;
+    } else if (rtype === 'parent') {
+      // fromId เป็นลูกใหม่, toId เป็นพ่อ/แม่
+      parentId   = toId;
+      newChildId = fromId;
+    }
+
+    if (parentId && newChildId) {
+      // โหลดข้อมูลล่าสุดหลังเพิ่ม forward+reverse แล้ว
+      var freshData = sheet.getDataRange().getValues();
+      // หาลูกคนอื่นทั้งหมดของ parentId
+      var siblings = [];
+      for (var s = 1; s < freshData.length; s++) {
+        if (String(freshData[s][6]) !== 'active') continue;
+        if (String(freshData[s][1]) === parentId && String(freshData[s][3]) === 'child') {
+          var sibId = String(freshData[s][2]);
+          if (sibId !== newChildId) siblings.push(sibId);
+        }
+      }
+      // สร้าง sibling ระหว่าง newChildId กับทุกคนใน siblings
+      for (var k = 0; k < siblings.length; k++) {
+        _ensureSibling(sheet, newChildId, siblings[k], user.userId, now);
+      }
+    }
+
     logActivity('add_relation', fromId + ' → ' + rtype + ' → ' + toId, user.userId);
     return ok(null, 'เพิ่มความสัมพันธ์สำเร็จ');
   } catch(e) { return fail(e.message); }
 }
+
+// Helper: สร้าง sibling สองทิศทางหากยังไม่มี
+function _ensureSibling(sheet, aId, bId, userId, now) {
+  var existing = sheet.getDataRange().getValues();
+  var hasAB = false, hasBA = false;
+  for (var i = 1; i < existing.length; i++) {
+    if (String(existing[i][6]) !== 'active') continue;
+    if (String(existing[i][1]) === aId && String(existing[i][2]) === bId && String(existing[i][3]) === 'sibling') hasAB = true;
+    if (String(existing[i][1]) === bId && String(existing[i][2]) === aId && String(existing[i][3]) === 'sibling') hasBA = true;
+  }
+  if (!hasAB) sheet.appendRow([generateId(), aId, bId, 'sibling', userId, now, 'active']);
+  if (!hasBA) sheet.appendRow([generateId(), bId, aId, 'sibling', userId, now, 'active']);
+}
+
+
 
 function getRelations(payload) {
   try {
