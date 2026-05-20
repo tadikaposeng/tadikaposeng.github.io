@@ -306,13 +306,13 @@ const FamilyGraph = (() => {
           <div class="node-photo" data-pid="${person.personId}">${photoHTML}</div>
           <div class="node-name">${person.firstName}</div>
           ${person.nickName ? `<div class="node-nick">"${person.nickName}"</div>` : ''}
-          <div class="node-controls">
-            <button class="nbtn nbtn-up"   data-pid="${person.personId}" data-dir="parent"  title="พ่อ/แม่">↑</button>
-            <button class="nbtn nbtn-left" data-pid="${person.personId}" data-dir="spouse"  title="คู่สมรส">←</button>
-            <button class="nbtn nbtn-plus" data-pid="${person.personId}" data-dir="add"     title="เพิ่มความสัมพันธ์">+</button>
-            <button class="nbtn nbtn-right"data-pid="${person.personId}" data-dir="sibling" title="พี่/น้อง">→</button>
-            <button class="nbtn nbtn-down" data-pid="${person.personId}" data-dir="child"   title="ลูก">↓</button>
-          </div>
+        </div>
+        <div class="node-controls">
+          <button class="nbtn nbtn-up"   data-pid="${person.personId}" data-dir="parent"  title="พ่อ/แม่">↑</button>
+          <button class="nbtn nbtn-left" data-pid="${person.personId}" data-dir="spouse"  title="คู่สมรส">←</button>
+          <button class="nbtn nbtn-plus" data-pid="${person.personId}" data-dir="add"     title="เพิ่มความสัมพันธ์">+</button>
+          <button class="nbtn nbtn-right"data-pid="${person.personId}" data-dir="sibling" title="พี่/น้อง">→</button>
+          <button class="nbtn nbtn-down" data-pid="${person.personId}" data-dir="child"   title="ลูก">↓</button>
         </div>`;
 
       el.querySelector('.node-photo').addEventListener('click', () => {
