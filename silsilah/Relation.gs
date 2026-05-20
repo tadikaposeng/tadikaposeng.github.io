@@ -111,10 +111,11 @@ function getRelations(payload) {
     var relData     = relSheet.getDataRange().getValues();
     var personData  = personSheet.getDataRange().getValues();
 
-    // Build person lookup map
+    // Build person lookup map (with displayName)
+    var usersMap  = getUsersMap();
     var personMap = {};
     for (var p = 1; p < personData.length; p++) {
-      personMap[String(personData[p][0])] = rowToPerson(personData[p]);
+      personMap[String(personData[p][0])] = rowToPerson(personData[p], usersMap);
     }
 
     var results = [];

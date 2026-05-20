@@ -7,26 +7,42 @@
 //          10=longitude 11=photoUrl 12=description 13=createdBy
 //          14=createdAt 15=updatedAt 16=isMerged 17=mergedTo
 
-function rowToPerson(row) {
+// Helper: build userId → displayName map from USERS sheet
+function getUsersMap() {
+  var map = {};
+  try {
+    var data = getSheet('USERS').getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      var uid  = String(data[i][0]);
+      var name = String(data[i][3]); // displayName col
+      if (uid) map[uid] = name || uid;
+    }
+  } catch(e) {}
+  return map;
+}
+
+function rowToPerson(row, usersMap) {
+  var createdBy = String(row[13]);
   return {
-    personId:    String(row[0]),
-    firstName:   String(row[1]),
-    lastName:    String(row[2]),
-    nickName:    String(row[3]),
-    gender:      String(row[4]),
-    birthDate:   String(row[5]),
-    deathDate:   String(row[6]),
-    phone:       String(row[7]),
-    address:     String(row[8]),
-    latitude:    String(row[9]),
-    longitude:   String(row[10]),
-    photoUrl:    String(row[11]),
-    description: String(row[12]),
-    createdBy:   String(row[13]),
-    createdAt:   String(row[14]),
-    updatedAt:   String(row[15]),
-    isMerged:    String(row[16]),
-    mergedTo:    String(row[17])
+    personId:      String(row[0]),
+    firstName:     String(row[1]),
+    lastName:      String(row[2]),
+    nickName:      String(row[3]),
+    gender:        String(row[4]),
+    birthDate:     String(row[5]),
+    deathDate:     String(row[6]),
+    phone:         String(row[7]),
+    address:       String(row[8]),
+    latitude:      String(row[9]),
+    longitude:     String(row[10]),
+    photoUrl:      String(row[11]),
+    description:   String(row[12]),
+    createdBy:     createdBy,
+    createdByName: (usersMap && usersMap[createdBy]) ? usersMap[createdBy] : createdBy,
+    createdAt:     String(row[14]),
+    updatedAt:     String(row[15]),
+    isMerged:      String(row[16]),
+    mergedTo:      String(row[17])
   };
 }
 
@@ -36,6 +52,7 @@ function searchPerson(payload) {
     if (!q) return ok([], 'กรุณาใส่คำค้นหา');
     var sheet = getSheet('PERSONS');
     var data  = sheet.getDataRange().getValues();
+    var usersMap = getUsersMap();
     var results = [];
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][16]) === 'true') continue; // skip merged
@@ -45,7 +62,7 @@ function searchPerson(payload) {
       var addr = String(data[i][8]).toLowerCase();
       var desc = String(data[i][12]).toLowerCase();
       if (fn.includes(q) || ln.includes(q) || nn.includes(q) || addr.includes(q) || desc.includes(q)) {
-        results.push(rowToPerson(data[i]));
+        results.push(rowToPerson(data[i], usersMap));
         if (results.length >= 50) break;
       }
     }
@@ -59,13 +76,14 @@ function getPerson(payload) {
     if (!personId) return fail('ไม่พบ personId');
     var sheet = getSheet('PERSONS');
     var data  = sheet.getDataRange().getValues();
+    var usersMap = getUsersMap();
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]) === personId) {
         // Follow merge redirect
         if (String(data[i][16]) === 'true' && data[i][17]) {
           return getPerson({ personId: String(data[i][17]) });
         }
-        return ok(rowToPerson(data[i]));
+        return ok(rowToPerson(data[i], usersMap));
       }
     }
     return fail('ไม่พบข้อมูลบุคคล');
