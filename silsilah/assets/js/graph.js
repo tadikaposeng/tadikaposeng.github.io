@@ -152,7 +152,7 @@ const FamilyGraph = (() => {
         </div>`;
 
       el.querySelector('.node-photo').addEventListener('click', () => {
-        if (this.onSelectPerson) this.onSelectPerson(person);
+        if (this._selectPersonCallback) this._selectPersonCallback(person);
       });
       el.querySelectorAll('.nbtn').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -252,7 +252,8 @@ const FamilyGraph = (() => {
       if (this._addRelationCallback) this._addRelationCallback(personId);
     }
 
-    onAddRelation(cb) { this._addRelationCallback = cb; }
+    onSelectPerson(cb) { this._selectPersonCallback = cb; }
+    onAddRelation(cb)  { this._addRelationCallback = cb; }
 
     resetView() { this.scale = 1; this._centerViewport(); }
     zoomIn()    { this.scale = Math.min(3, this.scale * 1.2); this._applyTransform(); }
