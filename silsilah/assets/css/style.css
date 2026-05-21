@@ -173,6 +173,36 @@ select.form-input { cursor:pointer; }
 .nbtn-right { grid-column:3; grid-row:2; font-size:.65rem; line-height:1.1; }
 .nbtn-down  { grid-column:2; grid-row:3; }
 
+/* ── Pin button — top-right of node card ───────────────────── */
+.nbtn-pin {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 24px; height: 24px;
+  background: rgba(13,13,26,.75);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  font-size: .75rem; line-height: 1;
+  color: rgba(255,255,255,.5);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transform: scale(.7);
+  transition: opacity .2s, transform .2s, background .15s, color .15s;
+  z-index: 25;
+  padding: 0;
+}
+.node-card:hover .nbtn-pin,
+.person-node.touch-active .nbtn-pin {
+  opacity: 1;
+  transform: scale(1);
+}
+.nbtn-pin:hover {
+  background: rgba(245,158,11,.8);
+  border-color: var(--amber);
+  color: #fff;
+  transform: scale(1.15) rotate(-20deg);
+}
+
 /* ── Modal ───────────────────────────────────────────────── */
 .modal-overlay {
   position:fixed; inset:0; z-index:1000;
