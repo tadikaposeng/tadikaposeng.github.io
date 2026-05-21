@@ -124,11 +124,12 @@ select.form-input { cursor:pointer; }
 .node-name  { font-size:.78rem; font-weight:600; color:#fff; text-align:center; margin-top:.4rem; line-height:1.2; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .node-nick  { font-size:.68rem; color:var(--amber-lt); text-align:center; }
 
-/* ── Node control buttons — cross layout BELOW the card ────── */
+/* ── Node control buttons — overlap bottom half of card ─────── */
 .node-controls {
   position: absolute;
-  /* place below card, centered horizontally */
-  bottom: -108px; left: 50%;
+  /* bottom:-63px → top of controls at card_top+107px (just below text),
+     extends 63px below card bottom */
+  bottom: -63px; left: 50%;
   transform: translateX(-50%);
   width:  126px;   /* 3 × 38px btn + 2 × 6px gap */
   height: 126px;
@@ -201,7 +202,7 @@ select.form-input { cursor:pointer; }
 @keyframes nodeAppear { from { opacity:0; transform:scale(.5); } to { opacity:1; transform:scale(1); } }
 
 /* ── Edge draw animation ─────────────────────────────────── */
-@keyframes edgeDraw { from { stroke-dashoffset:500; } to { stroke-dashoffset:0; } }
+@keyframes edgeDraw { from { stroke-dashoffset:1200; } to { stroke-dashoffset:0; } }
 
 /* ── Graph toolbar ───────────────────────────────────────── */
 .graph-toolbar {
