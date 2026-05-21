@@ -30,6 +30,8 @@ const API = (() => {
     // Relation
     addRelation:   (p) => call('addRelation',    p),
     getRelations:  (id)=> call('getRelations',   { personId: id }),
+    deleteRelation:(id)=> call('deleteRelation', { relationId: id }),
+    updateRelation:(p) => call('updateRelation', p),
     // Merge
     mergePerson:   (s,t)=> call('mergePerson',   { sourcePersonId: s, targetPersonId: t }),
     getMergeHistory:(id)=> call('getMergeHistory',{ personId: id }),
