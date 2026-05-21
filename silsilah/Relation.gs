@@ -1,5 +1,5 @@
 // ============================================================
-// Relation.gs — Add / Get Relations
+// Relation.gs — Add / Get / Delete / Update Relations
 // ============================================================
 
 var REVERSE_MAP = {
@@ -142,5 +142,100 @@ function getRelations(payload) {
       }
     }
     return ok(results);
+  } catch(e) { return fail(e.message); }
+}
+
+// ── Delete a relation (soft-delete forward + reverse) ──────
+function deleteRelation(payload, user) {
+  try {
+    requireAuth(user);
+    var relationId = String(payload.relationId || '');
+    if (!relationId) return fail('ไม่พบ relationId');
+
+    var sheet = getSheet('RELATIONS');
+    var data  = sheet.getDataRange().getValues();
+
+    var fromId = null, toId = null, rtype = null, targetRow = -1;
+
+    // Find the forward relation row
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === relationId) {
+        fromId     = String(data[i][1]);
+        toId       = String(data[i][2]);
+        rtype      = String(data[i][3]);
+        targetRow  = i + 1; // 1-indexed for sheet
+        break;
+      }
+    }
+    if (targetRow < 0) return fail('ไม่พบความสัมพันธ์');
+
+    // Soft-delete forward row
+    sheet.getRange(targetRow, 7).setValue('deleted');
+
+    // Soft-delete reverse row
+    var reverseType = REVERSE_MAP[rtype];
+    for (var j = 1; j < data.length; j++) {
+      if (
+        String(data[j][1]) === toId &&
+        String(data[j][2]) === fromId &&
+        String(data[j][3]) === reverseType &&
+        String(data[j][6]) === 'active'
+      ) {
+        sheet.getRange(j + 1, 7).setValue('deleted');
+        break;
+      }
+    }
+
+    logActivity('delete_relation', fromId + ' → ' + rtype + ' → ' + toId, user.userId);
+    return ok(null, 'ลบความสัมพันธ์สำเร็จ');
+  } catch(e) { return fail(e.message); }
+}
+
+// ── Update a relation type ─────────────────────────────────
+function updateRelation(payload, user) {
+  try {
+    requireAuth(user);
+    var relationId = String(payload.relationId  || '');
+    var newType    = String(payload.relationType || '');
+    if (!relationId || !newType) return fail('ข้อมูลไม่ครบ');
+    if (!REVERSE_MAP[newType]) return fail('ประเภทความสัมพันธ์ไม่ถูกต้อง');
+
+    var sheet = getSheet('RELATIONS');
+    var data  = sheet.getDataRange().getValues();
+
+    var fromId = null, toId = null, oldType = null, targetRow = -1;
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === relationId && String(data[i][6]) === 'active') {
+        fromId    = String(data[i][1]);
+        toId      = String(data[i][2]);
+        oldType   = String(data[i][3]);
+        targetRow = i + 1;
+        break;
+      }
+    }
+    if (targetRow < 0) return fail('ไม่พบความสัมพันธ์ หรือถูกลบแล้ว');
+    if (oldType === newType) return ok(null, 'ไม่มีการเปลี่ยนแปลง');
+
+    // Update forward type
+    sheet.getRange(targetRow, 4).setValue(newType);
+
+    // Update reverse type
+    var oldReverse = REVERSE_MAP[oldType];
+    var newReverse = REVERSE_MAP[newType];
+    for (var j = 1; j < data.length; j++) {
+      if (
+        String(data[j][1]) === toId &&
+        String(data[j][2]) === fromId &&
+        String(data[j][3]) === oldReverse &&
+        String(data[j][6]) === 'active'
+      ) {
+        sheet.getRange(j + 1, 4).setValue(newReverse);
+        break;
+      }
+    }
+
+    logActivity('update_relation', fromId + ' → ' + oldType + ' → ' + newType + ' (with ' + toId + ')', user.userId);
+    return ok(null, 'แก้ไขความสัมพันธ์สำเร็จ');
   } catch(e) { return fail(e.message); }
 }

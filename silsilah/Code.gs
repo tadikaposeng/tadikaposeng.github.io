@@ -44,6 +44,8 @@ function handleRequest(action, payload, user) {
     // ─── Relation ───────────────────────────────
     case 'addRelation':    return addRelation(payload, user);
     case 'getRelations':   return getRelations(payload);
+    case 'deleteRelation': return deleteRelation(payload, user);
+    case 'updateRelation': return updateRelation(payload, user);
 
     // ─── Merge ──────────────────────────────────
     case 'mergePerson':    return mergePerson(payload, user);
